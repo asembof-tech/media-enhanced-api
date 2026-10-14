@@ -28,3 +28,8 @@ mongoose.connect(process.env.MONGO_URI)
         app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
     })
     .catch((err) => console.log(err));
+
+    const authRoutes = require('./routes/authRoutes');
+// ...
+app.use('/api/auth', authRoutes); // <-- Add this line
+app.use('/api/posts', postRoutes);

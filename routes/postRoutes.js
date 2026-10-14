@@ -1,29 +1,26 @@
 const express = require('express');
 const router = express.Router();
-const upload = require('../middleware/upload');
 const Post = require('../models/Post');
+const { protect } = require('../middleware/authMiddleware');
+const upload = require('../middleware/upload'); // Your existing multer config
 
-// Upload up to 5 images per post
-router.post('/', upload.array('images', 5), async (req, res, next) => {
+// @route   POST /api/posts
+// @desc    Create a post (Protected route)
+router.post('/', protect, upload.array('images', 5), async (req, res) => {
     try {
-        // req.files contains the array of uploaded files
-        if (!req.files || req.files.length === 0) {
-            return res.status(400).json({ message: 'Please upload at least 1 image' });
-        }
-
-        const imageUrls = req.files.map(file => file.path);
+        const imageUrls = req.files ? req.files.map(file => file.path) : [];
 
         const newPost = new Post({
             title: req.body.title,
             content: req.body.content,
-            author: req.body.authorId, // Assuming you pass the user ID
+            author: req.user._id, // Extracted from the JWT middleware!
             images: imageUrls
         });
 
         await newPost.save();
         res.status(201).json({ success: true, data: newPost });
     } catch (error) {
-        next(error);
+        res.status(500).json({ message: error.message });
     }
 });
 
